@@ -1,4 +1,3 @@
-import React from 'react'
 import { Gif } from '../interfaces/gif.interface'
 
 interface GifListProps {
