@@ -1,16 +1,37 @@
+import { useAuthStore } from '@/auth/store/auth.store'
 import { CustomLogo } from '@/components/custom/CustomLogo'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@radix-ui/react-label'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
+import { toast } from 'sonner'
 
 export const RegisterPage = () => {
+    const { register } = useAuthStore();
+    const navigate = useNavigate();
+    const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const formData = new FormData(event.target as HTMLFormElement);
+        const email = formData.get('email') as string;
+        const password = formData.get('password') as string;
+        const fullName = formData.get('fullName') as string;
+
+        const isValid = await register(email, password, fullName);
+
+        if (isValid)
+            navigate('/')
+        else {
+
+            toast.error('Correo o contraseña no validos')
+        }
+
+    }
     return (
         <div className="flex flex-col gap-6">
             <Card className="overflow-hidden p-0">
                 <CardContent className="grid p-0 md:grid-cols-2">
-                    <form className="p-6 md:p-8">
+                    <form className="p-6 md:p-8" onSubmit={(e) => handleRegister(e)}>
                         <div className="flex flex-col gap-6">
                             <div className="flex flex-col items-center text-center">
                                 <CustomLogo />
@@ -22,6 +43,7 @@ export const RegisterPage = () => {
                                     id="username"
                                     type="text"
                                     placeholder="Nombre completo"
+                                    name='fullName'
                                     required />
                             </div>
                             <div className="grid gap-2">
@@ -29,6 +51,8 @@ export const RegisterPage = () => {
                                 <Input
                                     id="email"
                                     type="email"
+                                    name='email'
+
                                     placeholder="mail@gmail.com"
                                     required />
                             </div>
@@ -39,7 +63,7 @@ export const RegisterPage = () => {
                                         ¿Has olvidado tu contraseña?
                                     </a>
                                 </div>
-                                <Input id="password" type="password" required placeholder='Contraseña' />
+                                <Input name='password' id="password" type="password" required placeholder='Contraseña' />
                             </div>
                             <Button type="submit" className="w-full">
                                 Crear cuenta

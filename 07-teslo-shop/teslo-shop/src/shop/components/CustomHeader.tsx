@@ -1,12 +1,16 @@
+import { useAuthStore } from "@/auth/store/auth.store";
 import { CustomLogo } from "@/components/custom/CustomLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { Menu, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { useRef } from "react";
 import { Link, useParams, useSearchParams } from "react-router";
 export const CustomHeader = () => {
     const [searchParams, setSearchParams] = useSearchParams();
+
+    const { logout, authStatus, isAdmin } = useAuthStore();
+
     const { gender } = useParams();
     const inputRef = useRef<HTMLInputElement>(null)
     const query = searchParams.get('query') || '';
@@ -71,24 +75,43 @@ export const CustomHeader = () => {
                     <Button variant="ghost" size="icon" className="md:hidden">
                         <Search className="h-5 w-5" />
                     </Button>
-                    <Link to='auth/login'>
-                        <Button
-                            variant='default'
-                            size='sm'
-                            className="ml-2"
-                        >
-                            Login
-                        </Button>
-                    </Link>
-                    <Link to='admin'>
-                        <Button
-                            variant='destructive'
-                            size='sm'
-                            className="ml-2"
-                        >
-                            Admin
-                        </Button>
-                    </Link>
+                    {
+                        authStatus === 'not-authenticated' ? (
+
+                            <Link to='auth/login'>
+                                <Button
+                                    variant='default'
+                                    size='sm'
+                                    className="ml-2"
+                                >
+                                    Login
+                                </Button>
+                            </Link>
+                        )
+                            : (
+                                <Button
+                                    variant='outline'
+                                    size='sm'
+                                    className="ml-2"
+                                    onClick={logout}
+                                >
+                                    Cerrar sesion
+                                </Button>
+                            )
+                    }
+                    {
+                        isAdmin() &&
+                        <Link to='admin'>
+                            <Button
+                                variant='destructive'
+                                size='sm'
+                                className="ml-2"
+
+                            >
+                                Admin
+                            </Button>
+                        </Link>
+                    }
                 </div>
             </div>
         </div>
