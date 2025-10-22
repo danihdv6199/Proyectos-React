@@ -2,7 +2,7 @@ import { AdminTitle } from '@/admin/components/AdminTitle';
 import { Button } from '@/components/ui/button';
 import type { Product, Size } from '@/interfaces/product.interface';
 import { X, SaveAll, Tag, Plus, Upload } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { useForm } from 'react-hook-form'
 import { cn } from '@/lib/utils';
@@ -13,24 +13,31 @@ interface Props {
     product: Product;
     isPending: boolean;
 
-    onSubmit: (productLike: Partial<Product>) => Promise<void>
+    onSubmit: (productLike: Partial<Product> & { files?: File[] }) => Promise<void>
 }
 
 const availableSizes: Size[] = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 
+interface FormInputs extends Product {
+    files?: File[]
+}
+
 export const ProductForm = ({ title, subTitle, product, onSubmit, isPending }: Props) => {
 
     const [dragActive, setDragActive] = useState(false);
-    const { register, handleSubmit, formState: { errors }, getValues, setValue, watch } = useForm({
+    const { register, handleSubmit, formState: { errors }, getValues, setValue, watch } = useForm<FormInputs>({
         defaultValues: product
     })
 
     const labelInputRef = useRef<HTMLInputElement>(null);
 
+    // useEffect(() => {
+    //     setValue('files', [])
+    // })
+
     const selectedSizes = watch('sizes')
     const selectedTags = watch('tags')
     const currentStock = watch('stock')
-
     const addTag = () => {
         const newTag = labelInputRef.current!.value;
         if (newTag === '') return;
@@ -73,16 +80,26 @@ export const ProductForm = ({ title, subTitle, product, onSubmit, isPending }: P
         e.stopPropagation();
         setDragActive(false);
         const files = e.dataTransfer.files;
-        console.log(files);
+        if (!files) return;
+        const currentFiles = getValues('files') || [];
+        setValue('files', [...currentFiles, ...Array.from(files)]);
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
-        console.log(files);
+
+        if (!files) return;
+        const currentFiles = getValues('files') || [];
+        setValue('files', [...currentFiles, ...Array.from(files)]);
     };
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form
+            onSubmit={handleSubmit(async (values) => {
+                await onSubmit(values);
+                setValue('files', []); // ✅ limpiar imágenes por cargar
+            })}
+        >
             <div className="flex justify-between items-center">
                 <AdminTitle title={title} subtitle={subTitle} />
                 <div className="flex justify-end mb-10 gap-4">
@@ -433,6 +450,31 @@ export const ProductForm = ({ title, subTitle, product, onSubmit, isPending }: P
                                             </p>
                                         </div>
                                     ))}
+                                </div>
+                            </div>
+
+                            <div className="mt-6 space-y-3">
+                                <h3 className="text-sm font-medium text-slate-700">
+                                    Imágenes por cargar
+                                </h3>
+                                <div className="grid grid-cols-2 gap-3">
+                                    {
+                                        getValues('files')?.map((file, index) => (
+                                            <img
+                                                src={URL.createObjectURL(file)}
+                                                alt="Product"
+                                                key={index}
+                                                className="w-full h-full object-cover rounded-lg"
+                                            />
+                                        )
+
+                                        )
+                                    }
+                                    {
+                                        getValues('files')?.length === 0 && (
+                                            <p className='text-red-500'>No hay archivos seleccionados</p>
+                                        )
+                                    }
                                 </div>
                             </div>
                         </div>

@@ -14,8 +14,8 @@ export const AdminProductPage = () => {
     const navigate = useNavigate();
     const { isLoading, isError, data: product, productMutation } = useProduct(id || '');
 
-    const handleSubmit = async (data: Partial<Product>) => {
-        await productMutation.mutateAsync(data, {
+    const handleSubmit = async (productLike: Partial<Product> & { files?: File[] }) => {
+        await productMutation.mutateAsync(productLike, {
             onSuccess: (data) => {
                 toast.success('Producto actualizado correctamente')
                 navigate(`/admin/products/${data.id}`)
